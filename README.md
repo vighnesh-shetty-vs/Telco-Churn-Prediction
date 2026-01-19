@@ -47,6 +47,8 @@ In this project, we prioritize **Recall** over Accuracy.
 
 By using **SMOTE**, we improved the model's recall on the minority class, ensuring the business captures the maximum number of at-risk customers.
 
+![Sample 1 - High Risk Customer](assets/Sample_High_Risk_customer - 1.png)
+
 💻 How to Run Locally
 1. Clone the Repository
 Bash
