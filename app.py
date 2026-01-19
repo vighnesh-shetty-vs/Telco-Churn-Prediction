@@ -5,16 +5,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
-from sklearn.metrics import recall_score
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # --- STEP 1: DATA PIPELINE ---
-@st.cache_data # Caches data so it doesn't reload on every click
+@st.cache_data
 def load_and_prep_data():
-    # Update this path to your CSV location
+    # Ensure this matches your filename in the 'data' folder
     df = pd.read_csv("data/Telco_Customer_Dataset.csv")
     df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
     df.dropna(inplace=True)
-    customer_ids = df['customerID'] # Keep for reference
     df.drop('customerID', axis=1, inplace=True)
     
     # Target encoding
@@ -25,7 +25,7 @@ def load_and_prep_data():
     return df_encoded
 
 # --- STEP 2: MODEL TRAINING ---
-@st.cache_resource # Caches the model object
+@st.cache_resource
 def train_model(df):
     X = df.drop('Churn', axis=1)
     y = df['Churn']
@@ -54,14 +54,12 @@ This app uses **Logistic Regression** and **SMOTE** to predict if a telecom cust
 The model is trained on the Kaggle Telco Dataset.
 """)
 
-# Load and Train automatically
 try:
     data = load_and_prep_data()
     model, scaler, feature_columns = train_model(data)
 
     # SIDEBAR INPUTS
     st.sidebar.header("Customer Information")
-    
     tenure = st.sidebar.slider("Tenure (Months)", 0, 72, 12)
     monthly = st.sidebar.number_input("Monthly Charges ($)", 0.0, 200.0, 65.0)
     total = st.sidebar.number_input("Total Charges ($)", 0.0, 10000.0, 800.0)
@@ -72,11 +70,7 @@ try:
 
     # PROCESS INPUTS
     if st.sidebar.button("Predict Churn Status"):
-        # Create a dataframe for the single input
-        # Note: In a production app, you'd match all 30+ dummy columns. 
-        # For this demo, we use the top predictors for the calculation.
-        
-        # Build the feature vector (matching training columns)
+        # Build the feature vector
         input_data = pd.DataFrame(0, index=[0], columns=feature_columns)
         input_data['tenure'] = tenure
         input_data['MonthlyCharges'] = monthly
@@ -106,5 +100,39 @@ try:
             st.metric("Churn Probability", f"{probability:.2%}")
             st.progress(probability)
 
+        # --- DYNAMIC FEATURE IMPORTANCE ---
+        st.divider()
+        st.subheader("🔍 What is driving this prediction?")
+
+        # 1. Calculate local contribution: (Coefficient * Scaled Value)
+        # This determines how much EACH feature pushed the score UP or DOWN for THIS user
+        contributions = model.coef_[0] * input_scaled[0]
+
+        # 2. Create a DataFrame for visualization
+        local_importance = pd.DataFrame({
+            'Feature': feature_columns,
+            'Contribution': contributions
+        })
+
+        # 3. Get top 5 drivers (largest positive contributions to churn)
+        top_drivers = local_importance.sort_values(by='Contribution', ascending=False).head(5)
+
+        # 4. Plotting
+        fig, ax = plt.subplots(figsize=(10, 5))
+        sns.barplot(
+            x='Contribution', 
+            y='Feature', 
+            data=top_drivers, 
+            palette='Reds_r', 
+            ax=ax
+        )
+        ax.set_title(f"Top 5 Factors Increasing Risk for this Customer")
+        st.pyplot(fig)
+
+        st.write("""
+        **Business Insight:** The chart above shows the specific reasons why this customer is considered a risk. 
+        Unlike a static global chart, this updates every time you change the sidebar inputs.
+        """)
+
 except FileNotFoundError:
-    st.error("Dataset not found! Please ensure 'data/WA_Fn-UseC_-Telco-Customer-Churn.csv' exists.")
+    st.error("Dataset not found! Please ensure 'data/Telco_Customer_Dataset.csv' exists.")
