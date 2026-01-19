@@ -31,6 +31,22 @@ Class Imbalance Correction: Uses SMOTE to synthesize new examples of the minorit
 
 Interactive UI: A sidebar-driven interface allows users to input customer attributes and see immediate risk scores.
 
+## 🔍 Model Interpretability (Explainable AI)
+A key feature of this dashboard is the **Dynamic Feature Importance** chart. Unlike static models, this dashboard provides a local explanation for every single prediction. 
+
+* **Global Insight:** The model identifies that long-term contracts and low monthly charges generally reduce churn.
+* **Local Insight:** For an individual customer, the app calculates exactly how much their specific attributes (e.g., high Fiber Optic costs) contributed to their risk score.
+
+> **Business Value:** This allows customer success teams to see not just *who* might leave, but *why*, enabling personalized retention strategies (e.g., offering a contract upgrade if 'Month-to-month' is the primary churn driver).
+
+## 📈 Metrics & Business Impact
+In this project, we prioritize **Recall** over Accuracy. 
+
+* **Recall:** Our ability to find all customers who actually churn.
+* **Business Logic:** The cost of a "False Negative" (failing to predict a churner) is the loss of total future revenue. The cost of a "False Positive" (giving a discount to a loyal customer) is a minor margin hit.
+
+By using **SMOTE**, we improved the model's recall on the minority class, ensuring the business captures the maximum number of at-risk customers.
+
 💻 How to Run Locally
 1. Clone the Repository
 Bash
