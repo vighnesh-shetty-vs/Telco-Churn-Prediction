@@ -1,4 +1,7 @@
 📊 Telco Customer Churn AI Predictor
+
+Live App: View Interactive Dashboard https://vighnesh-shetty-vs-telco-churn-prediction-app-x2xli5.streamlit.app/
+
 This project implements an end-to-end Machine Learning solution to predict customer churn for a telecommunications company. It uses Logistic Regression optimized with SMOTE (Synthetic Minority Over-sampling Technique) to handle class imbalance, providing a functional Streamlit dashboard for real-time predictions.
 
 🎯 Business Case
