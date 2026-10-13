@@ -39,13 +39,30 @@ A key feature of this dashboard is the **Dynamic Feature Importance** chart. Unl
 
 > **Business Value:** This allows customer success teams to see not just *who* might leave, but *why*, enabling personalized retention strategies (e.g., offering a contract upgrade if 'Month-to-month' is the primary churn driver).
 
-## 📈 Metrics & Business Impact
-In this project, we prioritize **Recall** over Accuracy. 
+## 📈 Evaluation and recommendations
 
-* **Recall:** Our ability to find all customers who actually churn.
-* **Business Logic:** The cost of a "False Negative" (failing to predict a churner) is the loss of total future revenue. The cost of a "False Positive" (giving a discount to a loyal customer) is a minor margin hit.
+`python evaluate.py` compares the app's model with a simple business rule and two alternatives on the same 20% test set (1,407 customers, 26.6% churn). Full output: [reports/metrics.md](reports/metrics.md).
 
-By using **SMOTE**, we improved the model's recall on the minority class, ensuring the business captures the maximum number of at-risk customers.
+| Model | Recall | Precision | F1 | ROC-AUC |
+|---|---|---|---|---|
+| Rule: flag every month-to-month customer | 87.2% | 41.4% | 0.561 | |
+| Logistic regression, no rebalancing | 51.6% | 62.1% | 0.564 | 0.832 |
+| **Logistic regression + SMOTE (this app)** | **79.7%** | **50.2%** | **0.616** | 0.832 |
+| Logistic regression, `class_weight='balanced'` | 79.1% | 49.7% | 0.610 | 0.832 |
+
+**What this shows:**
+- **SMOTE doesn't make the model better at ranking customers.** ROC-AUC is identical, so all it does is move the decision threshold towards recall. `class_weight='balanced'` gets the same result without generating synthetic rows, and it's simpler to run in production.
+- **The model beats the obvious rule.** The rule finds more churners but wastes 59% of retention offers on loyal customers.
+- **Targeting works.** The riskiest 20% of customers contain 50% of all churners, and the riskiest 30% contain 65%.
+
+**Recommendations for the retention team:**
+1. **Start with month-to-month fibre customers:** 2,128 customers with a 54.6% churn rate, the largest high-risk group. Offer a discounted one-year contract. One-year fibre customers churn at 19.3%.
+2. **Focus on the first year.** Tenure is the strongest protective factor, so onboarding and early-life offers matter more than late retention.
+3. **Budget by score, not by segment.** Contacting the top 30% by model score reaches about two thirds of churners.
+
+**Caveats:**
+- TotalCharges is roughly tenure × MonthlyCharges. Because of that overlap, the MonthlyCharges coefficient comes out negative, which isn't believable on its own. Read the drivers as a group, not one by one.
+- This is a single random split. Cross-validation would give a confidence band on these numbers.
 
 ![Sample 1 - High Risk Customer](assets/Sample_High_Risk_customer_1.png)
 ![Sample 1 - High Risk Customer](assets/Sample_High_Risk_customer_2.png)
@@ -57,7 +74,7 @@ By using **SMOTE**, we improved the model's recall on the minority class, ensuri
 1. Clone the Repository
 Bash
 
-git clone https://github.com/YOUR_USERNAME/Telco-Churn-Prediction.git
+git clone https://github.com/vighnesh-shetty-vs/Telco-Churn-Prediction.git
 cd Telco-Churn-Prediction
 2. Set Up Environment
 PowerShell
